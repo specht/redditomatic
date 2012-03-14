@@ -33,6 +33,7 @@ for item in dom.getElementsByTagName('item'):
     if not os.path.exists(pngPath):
         with open(htmlPath, 'w') as fout:
             fout.write("<html><head><link href='../styles.css' type='text/css' rel='stylesheet' media='all' /></head><body><div class='post'>\n")
+            fout.write("<img class='qr' src='http://qrcode.kaywa.com/img.php?s=12&d=http%3A%2F%2Fwww.faz.net%2F-gum-6y6jv' />\n")
             fout.write("<h1>" + getText(item.getElementsByTagName('title')[0].childNodes).encode('utf-8') + "</h1>\n\n")
             fout.write(getText(item.getElementsByTagName('description')[0].childNodes).encode('utf-8') + "\n\n")
             fout.write("</div><center><img src='../hr.png' style='width: 30%;'/></center></body></html>\n")

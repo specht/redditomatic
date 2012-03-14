@@ -11,3 +11,8 @@ h1 {
 div.post img {
     width: 100%!important;
 }
+
+div.post img.qr {
+    width: 20%!important;
+    float: right;
+}
