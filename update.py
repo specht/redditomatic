@@ -9,11 +9,11 @@ dom = parseString(output)
 if not os.path.exists("snippets"):
     os.system("mkdir snippets")
     
-if (os.system("wkhtmltopdf --version") != 0):
+if (os.system("wkhtmltopdf --version > /dev/null") != 0):
     print("This script required wkhtmltopdf, stopping now.")
     exit(1)
     
-if (os.system("convert --version") != 0):
+if (os.system("convert --version > /dev/null") != 0):
     print("This script required ImageMagick (convert), stopping now.")
     exit(1)
     
