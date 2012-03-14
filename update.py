@@ -13,7 +13,7 @@ def getText(nodelist):
             rc.append(node.data)
     return ''.join(rc)
     
-if not os.path.exists(pngPath):
+if not os.path.exists("snippets"):
     os.system("mkdir snippets")
     
 for item in dom.getElementsByTagName('item'):
