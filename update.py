@@ -6,15 +6,23 @@ from subprocess import *
 output = Popen(["wget", "-q", "-O", "/dev/stdout", "http://www.faz.net/aktuell/?rssview=1"], stdout=PIPE).communicate()[0]
 dom = parseString(output)
 
+if not os.path.exists("snippets"):
+    os.system("mkdir snippets")
+    
+if (os.system("wkhtmltopdf --version") != 0):
+    print("This script required wkhtmltopdf, stopping now.")
+    exit(1)
+    
+if (os.system("convert --version") != 0):
+    print("This script required ImageMagick (convert), stopping now.")
+    exit(1)
+    
 def getText(nodelist):
     rc = []
     for node in nodelist:
         if node.nodeType == node.TEXT_NODE:
             rc.append(node.data)
     return ''.join(rc)
-    
-if not os.path.exists("snippets"):
-    os.system("mkdir snippets")
     
 for item in dom.getElementsByTagName('item'):
     guid = getText(item.getElementsByTagName('guid')[0].childNodes)
