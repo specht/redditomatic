@@ -1,0 +1,6 @@
+[submodule "ext/ethercard"]
+	path = ext/ethercard
+	url = git://github.com/jcw/ethercard.git
+[submodule "ext/thermalprinter"]
+	path = ext/thermalprinter
+	url = git://github.com/adafruit/Adafruit-Thermal-Printer-Library.git
