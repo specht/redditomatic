@@ -13,17 +13,21 @@ import re
 # idea based on http://code.activestate.com/recipes/440690/
 # ~ yeah, and then we added some stuff here and there ~
 
+mailPassword = ''
+with open('password') as f:
+    mailPassword = f.read().strip()
+
 CONTENT_RE = re.compile('image/(jpeg|png|gif)', re.I)
 
 if not os.path.exists("snippets"):
     os.system("mkdir snippets")
     
 if (os.system("wkhtmltopdf --version > /dev/null") != 0):
-    print("This script required wkhtmltopdf, stopping now.")
+    print("This script requires wkhtmltopdf, stopping now.")
     exit(1)
     
 if (os.system("convert --version > /dev/null") != 0):
-    print("This script required ImageMagick (convert), stopping now.")
+    print("This script requires ImageMagick (convert), stopping now.")
     exit(1)
     
 def handleMessage(message_str):
@@ -51,6 +55,7 @@ def handleMessage(message_str):
                     imageFilename = '.png'
                 elif part.get_content_type() == 'image/gif':
                     imageFilename = '.gif'
+                imageFilename = 'image' + imageFilename
                 imageContent = part.get_payload(None, True)
                 
     if len(imageContent) > 0:
@@ -60,6 +65,7 @@ def handleMessage(message_str):
     htmlPath = 'snippets/' + guid + '.html'
     pdfPath = 'snippets/' + guid + '.pdf'
     pbmPath = 'snippets/' + guid + '.pbm'
+    pngPath = 'snippets/' + guid + '.png'
     if not os.path.exists(pbmPath):
         with open(htmlPath, 'w') as fout:
             fout.write("<html><head><link href='../styles.css' type='text/css' rel='stylesheet' media='all' /></head><body><div class='post'>\n")
@@ -72,6 +78,7 @@ def handleMessage(message_str):
             fout.write("</div><!--<center><img src='../hr.png' style='width: 30%;'/></center>--></body></html>\n")
         os.system("wkhtmltopdf --encoding utf8 --page-width 48 --page-height 3000 -B 0 -L 0 -T 0 -R 0 \"" + htmlPath + "\" \"" + pdfPath + "\" 2> /dev/null")
         os.system("convert +antialias -density 500  \"" + pdfPath + "\" -trim -resize 384x -monochrome \"" + pbmPath + "\"");
+        os.system("convert \"" + pbmPath + "\" \"" + pngPath + "\"");
         os.system("rm \"" + htmlPath + "\"")
         os.system("rm \"" + pdfPath + "\"")
 
@@ -79,6 +86,7 @@ def handleMessage(message_str):
         os.system("rm " + 'snippets/' + guid + imageFilename)
         
     print("Arduino, print this file: snippets/" + guid + ".pbm !!1!")
+    os.system("sendEmail -f hardcopythat@gmail.com -t \"" + message['from'] + "\" -u \"Re: " + message['subject'] + "\" -s smtp.gmail.com -o tls=yes =xu hardcopythat -xp \"" + mailPassword + "\" -a \"" + pngPath + "\"")
 
 class MySMTPServer(smtpd.SMTPServer):
     def __init__(self, localaddr, remoteaddr):
