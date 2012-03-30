@@ -86,7 +86,7 @@ def handleMessage(message_str):
         os.system("rm " + 'snippets/' + guid + imageFilename)
         
     print("Arduino, print this file: snippets/" + guid + ".pbm !!1!")
-    os.system("sendEmail -f hardcopythat@gmail.com -t \"" + message['from'] + "\" -u \"Re: " + message['subject'] + "\" -s smtp.gmail.com -o tls=yes =xu hardcopythat -xp \"" + mailPassword + "\" -a \"" + pngPath + "\"")
+    os.system("sendEmail -f hardcopythat@gmail.com -t \"" + message['from'] + "\" -u \"Re: " + message['subject'] + "\" -s smtp.gmail.com -o tls=yes -xu hardcopythat -xp \"" + mailPassword + "\" -m \"Thanks for writing!\" -a \"" + pngPath + "\"")
 
 class MySMTPServer(smtpd.SMTPServer):
     def __init__(self, localaddr, remoteaddr):
