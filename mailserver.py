@@ -30,33 +30,43 @@ if (os.system("convert --version > /dev/null") != 0):
     print("This script requires ImageMagick (convert), stopping now.")
     exit(1)
     
-def handleMessage(message_str):
+def handleMessage(message_str, guid = None):
     message = email.message_from_string(message_str)
 
-    guid = str(uuid.uuid4())
+    if guid == None:
+        guid = str(uuid.uuid4())
+    with open('snippets/' + guid + '.txt', 'w') as fout:
+        fout.write(message_str)
+        
     imageContent = ''
     imageFilename = ''
     messageHtml = ''
 
     for part in message.walk():
+        charset = part.get_charset()
+        if charset == None:
+            charset = part.get_content_charset()
         if part.get_content_type() == 'text/plain':
-            messageHtml = "<p>" + part.get_payload(None, True) + "</p>"
+            messageHtml = "<p>" + unicode(part.get_payload(decode = True), charset, 'replace') + "</p>"
         elif part.get_content_type() == 'text/html':
             if len(messageHtml) == 0:
-                messageHtml = part.get_payload(None, True)
-        elif CONTENT_RE.search(part.get_content_type()) and part.get_filename() \
-        and part['Content-Disposition'] \
-        and part['Content-Disposition'].index('attachment') == 0:
-            if imageContent == '':
-                imageFilename = ''
-                if part.get_content_type() == 'image/jpeg':
-                    imageFilename = '.jpg'
-                elif part.get_content_type() == 'image/png':
-                    imageFilename = '.png'
-                elif part.get_content_type() == 'image/gif':
-                    imageFilename = '.gif'
-                imageFilename = 'image' + imageFilename
-                imageContent = part.get_payload(None, True)
+                messageHtml = unicode(part.get_payload(decode = True), charset, 'replace')
+        else:
+            try:
+                if CONTENT_RE.search(part.get_content_type()) and part.get_filename():
+                    thisContent = part.get_payload(None, True)
+                    if len(thisContent) > len(imageContent):
+                        imageFilename = ''
+                        if part.get_content_type() == 'image/jpeg':
+                            imageFilename = '.jpg'
+                        elif part.get_content_type() == 'image/png':
+                            imageFilename = '.png'
+                        elif part.get_content_type() == 'image/gif':
+                            imageFilename = '.gif'
+                        imageFilename = 'image' + imageFilename
+                        imageContent = part.get_payload(None, True)
+            except:
+                pass
                 
     if len(imageContent) > 0:
         with open('snippets/' + guid + imageFilename, 'wb') as fout:
@@ -77,23 +87,29 @@ def handleMessage(message_str):
                 fout.write("<img src='" + guid + imageFilename + "' />\n\n")
             fout.write("</div><!--<center><img src='../hr.png' style='width: 30%;'/></center>--></body></html>\n")
         os.system("wkhtmltopdf --encoding utf8 --page-width 48 --page-height 3000 -B 0 -L 0 -T 0 -R 0 \"" + htmlPath + "\" \"" + pdfPath + "\" 2> /dev/null")
-        os.system("convert +antialias -density 500  \"" + pdfPath + "\" -trim -resize 384x -monochrome \"" + pbmPath + "\"");
+        os.system("convert +antialias -density 202  \"" + pdfPath + "\" -trim -extent 384x -equalize -monochrome \"" + pbmPath + "\"");
         os.system("convert \"" + pbmPath + "\" \"" + pngPath + "\"");
         os.system("rm \"" + htmlPath + "\"")
         os.system("rm \"" + pdfPath + "\"")
+        os.system("rm \"" + pbmPath + "\"")
 
     if len(imageContent) > 0:
         os.system("rm " + 'snippets/' + guid + imageFilename)
         
     print("Arduino, print this file: snippets/" + guid + ".pbm !!1!")
+    print("Sending reply to " + message['from'] + "...")
     os.system("sendEmail -f hardcopythat@gmail.com -t \"" + message['from'] + "\" -u \"Re: " + message['subject'] + "\" -s smtp.gmail.com -o tls=yes -xu hardcopythat -xp \"" + mailPassword + "\" -m \"Copy that!\" -a \"" + pngPath + "\"")
+    #raise StandardError()
 
 class MySMTPServer(smtpd.SMTPServer):
     def __init__(self, localaddr, remoteaddr):
         smtpd.SMTPServer.__init__(self, localaddr, remoteaddr)
 
     def process_message(self, peer, mailfrom, rcpttos, data):
-        handleMessage(data)
+        try:
+            handleMessage(data)
+        except:
+            pass
 
 class MyEmailServer(threading.Thread):
     def __init__(self, ipport):
@@ -111,6 +127,12 @@ class MyEmailServer(threading.Thread):
         self.server.close()
 
 if __name__ == "__main__":
+    
+    #s = ''
+    #with open('snippets/0b403f73-6424-472b-9454-2600beac2593.txt') as f:
+        #s = f.read()
+    #handleMessage(s, '0b403f73-6424-472b-9454-2600beac2593')
+    #exit(1)
 
     if len(sys.argv) != 2:
         print "usage: ip:port"
